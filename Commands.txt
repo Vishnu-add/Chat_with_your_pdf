@@ -1,0 +1,17 @@
+Youtube video : https://youtu.be/rIV1EseKwU4?si=YOJ2a_9eYVPhxn6X
+Github : https://github.com/AIAnytime/Search-Your-PDF-App/tree/main
+LLM : https://huggingface.co/MBZUAI/LaMini-T5-738M
+
+
+NOTE: Remove the chroma settings from the code to work with latest versions
+
+
+
+1) Creating a virtual env
+python -m venv <env_name>
+
+2) Activating virtual environment
+search_pdf_env\Scripts\activate
+
+3)Installing requirements:
+pipi nstall -r requirements.txt
