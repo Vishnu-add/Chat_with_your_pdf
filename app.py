@@ -156,6 +156,7 @@ def main():
 
             user_input = st.text_input(label="Message",key="input")
             # user_input = st.chat_input("",key="input")
+            # For displaying text_input in the bottom
             # styl = f"""
             #         <style>
             #             .stTextInput {{
@@ -165,7 +166,7 @@ def main():
             #         </style>
             #         """
             # st.markdown(styl, unsafe_allow_html=True)
-
+            
             # Initialize session state for generated responses and past messages
             if "generated" not in st.session_state:
                 st.session_state["generated"] = ["I am ready to help you"]
