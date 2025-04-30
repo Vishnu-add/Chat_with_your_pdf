@@ -2,5 +2,6 @@ __pycache__/
 # Lib/
 search_pdf_env/
 LaMini-T5-738M/
-# db/
-# uploaded/
+db/
+uploaded/
+docs/

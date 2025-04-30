@@ -16,61 +16,69 @@ from langchain.vectorstores import Chroma
 import os
 
 st.set_page_config(page_title="pdf-GPT", page_icon="📖", layout="wide")
-# @st.cache_resource
-# def get_model():
-#     device = torch.device('cpu')
-#     # device = torch.device('cuda:0')
 
-#     checkpoint = "LaMini-T5-738M"
-#     checkpoint = "MBZUAI/LaMini-T5-738M"
-#     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-#     base_model = AutoModelForSeq2SeqLM.from_pretrained(
-#         checkpoint,
-#         device_map=device,
-#         torch_dtype = torch.float32,
-#         # offload_folder= "/model_ck"
-#     )
-#     return base_model,tokenizer
+@st.cache_resource
+def get_model():
+    device = torch.device('cpu')
+    # device = torch.device('cuda:0')
 
-# @st.cache_resource
-# def llm_pipeline():
-#     base_model,tokenizer = get_model()
-#     pipe = pipeline(
-#         'text2text-generation',
-#         model = base_model,
-#         tokenizer=tokenizer,
-#         max_length = 512,
-#         do_sample = True,
-#         temperature = 0.3,
-#         top_p = 0.95,
-#         # device=device
-#     )
+    checkpoint = "LaMini-T5-738M"
+    checkpoint = "MBZUAI/LaMini-T5-738M"
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+    base_model = AutoModelForSeq2SeqLM.from_pretrained(
+        checkpoint,
+        device_map=device,
+        torch_dtype = torch.float32,
+        # offload_folder= "/model_ck"
+    )
+    return base_model,tokenizer
 
-#     local_llm = HuggingFacePipeline(pipeline = pipe)
-#     return local_llm
+@st.cache_resource
+def llm_pipeline():
+    base_model,tokenizer = get_model()
+    pipe = pipeline(
+        'text2text-generation',
+        model = base_model,
+        tokenizer=tokenizer,
+        max_length = 512,
+        do_sample = True,
+        temperature = 0.3,
+        top_p = 0.95,
+        # device=device
+    )
 
-# @st.cache_resource
-# def qa_llm():
-#     llm = llm_pipeline()
-#     embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-#     db = Chroma(persist_directory="db", embedding_function = embeddings)
-#     retriever = db.as_retriever()
-#     qa = RetrievalQA.from_chain_type(
-#         llm=llm,
-#         chain_type = "stuff",
-#         retriever = retriever,
-#         return_source_documents=True
-#     )
-#     return qa
+    local_llm = HuggingFacePipeline(pipeline = pipe)
+    return local_llm
+
+@st.cache_resource
+def qa_llm():
+    llm = llm_pipeline()
+    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    db = Chroma(persist_directory="db", embedding_function = embeddings)
+    retriever = db.as_retriever()
+    qa = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type = "stuff",
+        retriever = retriever,
+        return_source_documents=True
+    )
+    return qa
 
 
-# def process_answer(instruction):
-#     response=''
-#     instruction = instruction
-#     qa = qa_llm()
-#     generated_text = qa(instruction)
-#     answer = generated_text['result']
-#     return answer, generated_text
+def process_answer(instruction):
+    response=''
+    instruction = instruction
+    qa = qa_llm()
+    generated_text = qa(instruction)
+    answer = generated_text['result']
+    return answer, generated_text
+
+def clear_history():
+    # Clear the conversation history
+    # history["generated"] = []
+    # history["past"] = []
+    st.session_state["generated"] = []
+    st.session_state["past"] = []
 
 # Display conversation history using Streamlit messages
 def display_conversation(history):
@@ -98,9 +106,10 @@ def displayPDF(file,file_name):
 
     # Embedding PDF in HTML
     # pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="600" height="1000" type="application/pdf"></iframe>'
     # st.write()
     # pdf_display = f'<embed src="http://localhost:8900/{file_name}" width="700" height="1000" type="application/pdf"></embed>'
-    pdf_display = f'<iframe src="http://localhost:8900/{file_name}" width="700" height="900" type="application/pdf"></iframe>'
+    # pdf_display = f'<iframe src="http://localhost:8900/{file_name}" width="700" height="900" type="application/pdf"></iframe>'
 
 
     # st.write(pdf_display)
@@ -124,8 +133,8 @@ def data_ingestion(file_path,persist_directory):
         db=None
   
 def main():
-    st.markdown("<h1 style='text-align:center; color: blue;'>Chat with Your PDF 📑</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align:center; color: grey;'>Built by Vicky</h3>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center; color: green;'>Chat with Your PDF 📑</h1>", unsafe_allow_html=True)
+    # st.markdown("<h3 style='text-align:center; color: grey;'>Built by Vicky</h3>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center; color: red;'>Upload your PDF</h2>", unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader("",type=["pdf"])
@@ -173,19 +182,27 @@ def main():
             if "past" not in st.session_state:
                 st.session_state["past"] = ["Hey There!"]
 
+            if st.button("Clear History",key="clear"):
+                clear_history()
+
             # Search the database for a response based on user input and update session state
-            if user_input:
-                # answer = process_answer({"query" : user_input})
-                answer = user_input
+            if st.button("Get Answer",key="submit"):
+                # st.write("Button Pressed")
+            # if user_input:
+
+                answer = process_answer({"query" : user_input})
+                # answer = user_input
                 st.session_state["past"].append(user_input)
                 response = answer
                 st.session_state["generated"].append(response)
-                st.write(st.session_state)
+                # st.write(st.session_state)
                 # user_input = st.text_input(label="Message",key="input")
 
             # Display Conversation history using Streamlit messages
             if st.session_state["generated"]:
                 display_conversation(st.session_state)
+
+            
 
 
 

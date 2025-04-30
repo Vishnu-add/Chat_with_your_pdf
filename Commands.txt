@@ -14,4 +14,4 @@ python -m venv <env_name>
 search_pdf_env\Scripts\activate
 
 3)Installing requirements:
-pipi nstall -r requirements.txt
+pip install -r requirements.txt
